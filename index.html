@@ -793,30 +793,25 @@
     const modalTitle = document.getElementById('modal-title');
     const modalMessage = document.getElementById('modal-message');
     const modalOkButton = document.getElementById('modal-ok-button');
-
     const userModalContainer = document.getElementById('user-modal-container');
     const userModalTitle = document.getElementById('user-modal-title');
     const userForm = document.getElementById('user-form');
     const addUserBtn = document.getElementById('add-user-btn');
     const userModalCancelBtn = document.getElementById('user-modal-cancel');
-
     const detailsModalContainer = document.getElementById('details-modal-container');
     const detailsForm = document.getElementById('details-form');
     const detailsModalCancelTopBtn = document.getElementById('details-modal-cancel-top');
     const detailsModalCancelBtn = document.getElementById('details-modal-cancel');
-
     const confirmModalContainer = document.getElementById('confirm-modal-container');
     const emptyTableBtn = document.getElementById('empty-table-btn');
     const confirmEmptyBtn = document.getElementById('confirm-empty-btn');
     const cancelEmptyBtn = document.getElementById('cancel-empty-btn');
-
     const categoriesModalContainer = document.getElementById('categories-modal-container');
     const editCategoriesBtn = document.getElementById('edit-categories-btn');
     const categoriesForm = document.getElementById('categories-form');
     const addCategoryBtn = document.getElementById('add-category-btn');
     const categoriesModalCancelBtn = document.getElementById('categories-modal-cancel');
     const categoriesListContainer = document.getElementById('categories-list-container');
-
     const trendsModalContainer = document.getElementById('trends-modal-container');
     const editTrendsBtn = document.getElementById('edit-trends-btn');
     const trendsForm = document.getElementById('trends-form');
@@ -824,60 +819,65 @@
     const trendsModalCancelBtn = document.getElementById('trends-modal-cancel');
     const trendsListContainer = document.getElementById('trends-list-container');
     
-// Botón para generar y descargar el reporte
-const adminDownloadReportBtn = document.getElementById('admin-download-report-btn');
+    // ######################################################################
+    // ##                  INICIO DE LA SECCIÓN CORREGIDA                  ##
+    // ######################################################################
+    
+    // Botón para generar y descargar el reporte
+    const adminDownloadReportBtn = document.getElementById('admin-download-report-btn');
 
-adminDownloadReportBtn.addEventListener('click', () => {
-    // 1. Clonar todo el documento HTML (<html>...</html>) en una variable.
-    // Esto crea una copia en memoria sin afectar lo que ves en pantalla.
-    const reportDocument = document.documentElement.cloneNode(true);
+    adminDownloadReportBtn.addEventListener('click', () => {
+        // 1. Clonar todo el documento HTML (<html>...</html>) en una variable.
+        // Esto crea una copia en memoria sin afectar lo que ves en pantalla.
+        const reportDocument = document.documentElement.cloneNode(true);
 
-    // 2. Buscar cada una de las pantallas principales dentro del documento clonado.
-    const loginScreenClone = reportDocument.querySelector('#login-screen');
-    const dashboardScreenClone = reportDocument.querySelector('#dashboard-screen');
-    const adminScreenClone = reportDocument.querySelector('#admin-screen');
+        // 2. Buscar cada una de las pantallas principales dentro del documento clonado.
+        const loginScreenClone = reportDocument.querySelector('#login-screen');
+        const dashboardScreenClone = reportDocument.querySelector('#dashboard-screen');
+        const adminScreenClone = reportDocument.querySelector('#admin-screen');
 
-    // 3. Establecer el estado de visibilidad inicial en el clon.
-    // Forzamos que la pantalla de Login sea la ÚNICA visible.
+        // 3. Establecer el estado de visibilidad inicial en el clon.
+        // Forzamos que la pantalla de Login sea la ÚNICA visible.
+        if (loginScreenClone) {
+            // A la pantalla de Login le quitamos cualquier clase que la oculte.
+            loginScreenClone.classList.remove('hidden-screen');
+            // Y le aplicamos un estilo en línea para asegurar que se muestre como un contenedor flex.
+            loginScreenClone.style.display = 'flex';
+        }
+        if (dashboardScreenClone) {
+            // A la pantalla del Dashboard la ocultamos de forma definitiva con un estilo en línea.
+            dashboardScreenClone.style.display = 'none';
+        }
+        if (adminScreenClone) {
+            // Hacemos lo mismo con la pantalla de Administrador.
+            adminScreenClone.style.display = 'none';
+        }
 
-    if (loginScreenClone) {
-        // A la pantalla de Login le quitamos cualquier clase que la oculte.
-        loginScreenClone.classList.remove('hidden-screen');
-        // Y le aplicamos un estilo en línea para asegurar que se muestre como un contenedor flex.
-        loginScreenClone.style.display = 'flex';
-    }
+        // 4. Eliminar la etiqueta <script> del clon.
+        // Esto es crucial para que el archivo descargado sea estático y no intente ejecutar ninguna lógica.
+        const scriptInClone = reportDocument.querySelector('script');
+        if (scriptInClone) {
+            scriptInClone.remove();
+        }
 
-    if (dashboardScreenClone) {
-        // A la pantalla del Dashboard la ocultamos de forma definitiva con un estilo en línea.
-        dashboardScreenClone.style.display = 'none';
-    }
+        // 5. Convertir el clon (ya modificado y limpio) a texto HTML.
+        const htmlContent = reportDocument.outerHTML;
 
-    if (adminScreenClone) {
-        // Hacemos lo mismo con la pantalla de Administrador.
-        adminScreenClone.style.display = 'none';
-    }
-
-    // 4. Eliminar la etiqueta <script> del clon.
-    // Esto es crucial para que el archivo descargado sea estático y no intente ejecutar ninguna lógica.
-    const scriptInClone = reportDocument.querySelector('script');
-    if (scriptInClone) {
-        scriptInClone.remove();
-    }
-
-    // 5. Convertir el clon (ya modificado y limpio) a texto HTML.
-    const htmlContent = reportDocument.outerHTML;
-
-    // 6. Crear un "Blob" (un objeto tipo archivo) y generar un enlace para su descarga.
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'reporte_evaluacion_login.html'; // Nombre del archivo descargado
-    document.body.appendChild(a);
-    a.click(); // Simular un clic en el enlace para iniciar la descarga
-    document.body.removeChild(a); // Limpiar el enlace del documento
-    URL.revokeObjectURL(url); // Liberar la memoria del navegador
-});
+        // 6. Crear un "Blob" (un objeto tipo archivo) y generar un enlace para su descarga.
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'reporte_evaluacion_login.html'; // Nombre del archivo descargado
+        document.body.appendChild(a);
+        a.click(); // Simular un clic en el enlace para iniciar la descarga
+        document.body.removeChild(a); // Limpiar el enlace del documento
+        URL.revokeObjectURL(url); // Liberar la memoria del navegador
+    });
+    
+    // ######################################################################
+    // ##                    FIN DE LA SECCIÓN CORREGIDA                   ##
+    // ######################################################################
 
     // Función para mostrar el modal de alerta
     function showModal(title, message) {
@@ -1627,7 +1627,6 @@ adminDownloadReportBtn.addEventListener('click', () => {
         document.getElementById('login-subtitle').textContent = database.loginTexts.subtitle;
         document.getElementById('login-description').textContent = database.loginTexts.description;
     });
-
 </script>
 
 </body>
