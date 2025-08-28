@@ -824,26 +824,43 @@
     const trendsModalCancelBtn = document.getElementById('trends-modal-cancel');
     const trendsListContainer = document.getElementById('trends-list-container');
     
-    // Botón de descargar reporte en panel de admin
-    const adminDownloadReportBtn = document.getElementById('admin-download-report-btn');
-    adminDownloadReportBtn.addEventListener('click', () => {
-        // Primero, asegurar que la pantalla de login es la visible
-        switchScreen(adminScreen, loginScreen);
-        
-        // Dar un pequeño tiempo para que el DOM se actualice
-        setTimeout(() => {
-            const htmlContent = document.documentElement.outerHTML;
-            const blob = new Blob([htmlContent], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'reporte_evaluacion.html';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }, 500); // 500ms para asegurar la transición de pantalla
-    });
+// Botón de descargar reporte en panel de admin
+const adminDownloadReportBtn = document.getElementById('admin-download-report-btn');
+adminDownloadReportBtn.addEventListener('click', () => {
+    // 1. Clona el documento HTML actual en una variable para no afectar la vista del usuario.
+    const reportDocument = document.documentElement.cloneNode(true);
+
+    // 2. En el clon, busca los contenedores que podrían estar ocultos y elimina la clase 'hidden-screen'.
+    const dashboardScreenInClone = reportDocument.querySelector('#dashboard-screen');
+    const adminScreenInClone = reportDocument.querySelector('#admin-screen');
+
+    if (dashboardScreenInClone) {
+        dashboardScreenInClone.classList.remove('hidden-screen');
+    }
+    if (adminScreenInClone) {
+        adminScreenInClone.classList.remove('hidden-screen');
+    }
+    
+    // 3. (Opcional pero recomendado) Elimina el script del clon para que el reporte sea estático (no interactivo).
+    const scriptInClone = reportDocument.querySelector('script');
+    if (scriptInClone) {
+        scriptInClone.remove();
+    }
+
+    // 4. Convierte el clon (ya limpio) a texto HTML.
+    const htmlContent = reportDocument.outerHTML;
+
+    // 5. Crea y descarga el archivo Blob con el contenido limpio.
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'reporte_evaluacion.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
 
     // Función para mostrar el modal de alerta
     function showModal(title, message) {
