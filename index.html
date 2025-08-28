@@ -824,51 +824,59 @@
     const trendsModalCancelBtn = document.getElementById('trends-modal-cancel');
     const trendsListContainer = document.getElementById('trends-list-container');
     
-// Botón de descargar reporte en panel de admin
+// Botón para generar y descargar el reporte
 const adminDownloadReportBtn = document.getElementById('admin-download-report-btn');
+
 adminDownloadReportBtn.addEventListener('click', () => {
-    // 1. Clona el documento HTML actual para no afectar la vista en vivo.
+    // 1. Clonar todo el documento HTML (<html>...</html>) en una variable.
+    // Esto crea una copia en memoria sin afectar lo que ves en pantalla.
     const reportDocument = document.documentElement.cloneNode(true);
 
-    // 2. Busca los contenedores de cada pantalla principal en el clon.
+    // 2. Buscar cada una de las pantallas principales dentro del documento clonado.
     const loginScreenClone = reportDocument.querySelector('#login-screen');
     const dashboardScreenClone = reportDocument.querySelector('#dashboard-screen');
     const adminScreenClone = reportDocument.querySelector('#admin-screen');
 
-    // 3. LA LÓGICA CLAVE: Forzamos la visibilidad del DASHBOARD y ocultamos el resto.
-    if (dashboardScreenClone) {
-        // Hacemos visible el dashboard
-        dashboardScreenClone.classList.remove('hidden-screen');
-        dashboardScreenClone.style.display = 'flex';
-    }
+    // 3. Establecer el estado de visibilidad inicial en el clon.
+    // Forzamos que la pantalla de Login sea la ÚNICA visible.
+
     if (loginScreenClone) {
-        // Ocultamos la pantalla de login
-        loginScreenClone.style.display = 'none';
+        // A la pantalla de Login le quitamos cualquier clase que la oculte.
+        loginScreenClone.classList.remove('hidden-screen');
+        // Y le aplicamos un estilo en línea para asegurar que se muestre como un contenedor flex.
+        loginScreenClone.style.display = 'flex';
     }
+
+    if (dashboardScreenClone) {
+        // A la pantalla del Dashboard la ocultamos de forma definitiva con un estilo en línea.
+        dashboardScreenClone.style.display = 'none';
+    }
+
     if (adminScreenClone) {
-        // Ocultamos la pantalla de admin
+        // Hacemos lo mismo con la pantalla de Administrador.
         adminScreenClone.style.display = 'none';
     }
 
-    // 4. Eliminamos el script para asegurar que el reporte sea estático y no interactivo.
+    // 4. Eliminar la etiqueta <script> del clon.
+    // Esto es crucial para que el archivo descargado sea estático y no intente ejecutar ninguna lógica.
     const scriptInClone = reportDocument.querySelector('script');
     if (scriptInClone) {
         scriptInClone.remove();
     }
 
-    // 5. Convierte el clon (configurado para mostrar el dashboard) a texto HTML.
+    // 5. Convertir el clon (ya modificado y limpio) a texto HTML.
     const htmlContent = reportDocument.outerHTML;
 
-    // 6. Crea y descarga el archivo Blob.
+    // 6. Crear un "Blob" (un objeto tipo archivo) y generar un enlace para su descarga.
     const blob = new Blob([htmlContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'reporte_de_evaluacion.html';
+    a.download = 'reporte_evaluacion_login.html'; // Nombre del archivo descargado
     document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    a.click(); // Simular un clic en el enlace para iniciar la descarga
+    document.body.removeChild(a); // Limpiar el enlace del documento
+    URL.revokeObjectURL(url); // Liberar la memoria del navegador
 });
 
     // Función para mostrar el modal de alerta
