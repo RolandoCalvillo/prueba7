@@ -121,13 +121,12 @@
         }
 
         .criteria-content {
-            transition: all 0.3s ease-in-out;
+            transition: max-height 0.5s ease-in-out, margin-top 0.5s ease-in-out;
             overflow: hidden;
             max-height: 0;
         }
 
         .criteria-content.open {
-            max-height: 500px; /* Adjust as needed */
             margin-top: 1rem;
         }
         
@@ -188,11 +187,6 @@
             <button id="login-button" class="w-full bg-[#2a6aff] text-white font-semibold py-3 px-6 rounded-xl transition duration-300 ease-in-out transform hover:scale-105 hover:bg-[#1a55ff] shadow-lg">
                 Consultar mi Evaluación ✨
             </button>
-            <div class="flex justify-center mt-8 mb-4">
-                <button id="download-report-btn" class="w-full bg-[#2a6aff] text-white font-semibold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105 hover:bg-[#1a55ff] shadow-lg">
-                    Generar y Descargar Reporte 📥
-                </button>
-            </div>
         </div>
     </div>
 </div>
@@ -413,6 +407,13 @@
             <p class="text-gray-700 mb-4">Añade, edita o elimina las categorías del gráfico de líneas.</p>
             <button id="edit-trends-btn" class="bg-[#4ade80] text-white font-semibold py-2 px-6 rounded-full transition duration-300 hover:bg-[#34d399]">
                 Editar Categorías de Tendencias
+            </button>
+        </div>
+        
+        <!-- Botón de Descarga -->
+        <div class="flex justify-center mt-8 mb-4">
+             <button id="admin-download-report-btn" class="bg-gray-600 text-white font-semibold py-3 px-8 rounded-full transition duration-300 transform hover:scale-105 hover:bg-gray-700 shadow-lg">
+                Generar y Descargar Reporte 📥
             </button>
         </div>
     </div>
@@ -823,19 +824,25 @@
     const trendsModalCancelBtn = document.getElementById('trends-modal-cancel');
     const trendsListContainer = document.getElementById('trends-list-container');
     
-    // Botón de descargar reporte
-    const downloadReportBtn = document.getElementById('download-report-btn');
-    downloadReportBtn.addEventListener('click', () => {
-        const htmlContent = document.documentElement.outerHTML;
-        const blob = new Blob([htmlContent], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'reporte_evaluacion.html';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+    // Botón de descargar reporte en panel de admin
+    const adminDownloadReportBtn = document.getElementById('admin-download-report-btn');
+    adminDownloadReportBtn.addEventListener('click', () => {
+        // Primero, asegurar que la pantalla de login es la visible
+        switchScreen(adminScreen, loginScreen);
+        
+        // Dar un pequeño tiempo para que el DOM se actualice
+        setTimeout(() => {
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'reporte_evaluacion.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 500); // 500ms para asegurar la transición de pantalla
     });
 
     // Función para mostrar el modal de alerta
@@ -959,7 +966,7 @@
                     Criterios de Calificación
                     <span class="arrow-icon">&#9660;</span>
                 </button>
-                <div class="criteria-content bg-white p-4 rounded-lg mt-2 hidden" data-criteria-for="${cat.category}">
+                <div class="criteria-content bg-white p-4 rounded-lg" data-criteria-for="${cat.category}">
                     <ul class="space-y-2 text-sm text-left">
                         ${criteriaHtml}
                     </ul>
@@ -991,7 +998,14 @@
                 const card = btn.closest('.category-card');
                 const criteriaContent = card.querySelector('.criteria-content');
                 const arrowIcon = btn.querySelector('.arrow-icon');
-                criteriaContent.classList.toggle('hidden');
+                
+                if (criteriaContent.classList.contains('open')) {
+                    criteriaContent.classList.remove('open');
+                    criteriaContent.style.maxHeight = '0';
+                } else {
+                    criteriaContent.classList.add('open');
+                    criteriaContent.style.maxHeight = criteriaContent.scrollHeight + 'px';
+                }
                 arrowIcon.classList.toggle('open');
             });
         });
