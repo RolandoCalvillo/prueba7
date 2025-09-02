@@ -827,52 +827,78 @@
     const adminDownloadReportBtn = document.getElementById('admin-download-report-btn');
 
     adminDownloadReportBtn.addEventListener('click', () => {
-        // 1. Clonar todo el documento HTML (<html>...</html>) en una variable.
-        // Esto crea una copia en memoria sin afectar lo que ves en pantalla.
+        // --- 1. PREPARACIÓN ---
+        // Clonar el documento actual para no modificar la página en vivo.
         const reportDocument = document.documentElement.cloneNode(true);
 
-        // 2. Buscar cada una de las pantallas principales dentro del documento clonado.
+        // --- 2. INCRUSTAR DATOS ACTUALIZADOS ---
+        // Convertir el objeto 'database' actual (con todas las ediciones) a un string de JavaScript.
+        const updatedDatabaseString = `let database = ${JSON.stringify(database, null, 4)};`;
+        
+        // Buscar la etiqueta <script> en el documento clonado.
+        const scriptTagInClone = reportDocument.querySelector('script');
+        if (scriptTagInClone) {
+            // Reemplazar todo el contenido del script con la nueva base de datos y la lógica de la aplicación.
+            // Primero, encontramos el final de la declaración de 'database' para cortarla.
+            const scriptContent = scriptTagInClone.innerHTML;
+            const databaseEndIndex = scriptContent.indexOf('// Funciones de persistencia en localStorage');
+            const logicAfterDatabase = scriptContent.substring(databaseEndIndex);
+
+            // Unimos la nueva base de datos con el resto de la lógica.
+            scriptTagInClone.innerHTML = updatedDatabaseString + '\n\n' + logicAfterDatabase;
+        }
+
+        // --- 3. HACER EL ARCHIVO AUTOCONTENIDO (INCRUSTAR CSS) ---
+        const headInClone = reportDocument.querySelector('head');
+        const styleTag = document.createElement('style');
+        let allCssRules = '';
+
+        // Recorrer todas las hojas de estilo de la página.
+        Array.from(document.styleSheets).forEach(sheet => {
+            try {
+                // Unir todas las reglas de una hoja de estilo en un solo string.
+                allCssRules += Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
+            } catch (e) {
+                console.warn("No se pudo leer una hoja de estilos (puede ser de un dominio externo):", e);
+            }
+        });
+
+        styleTag.textContent = allCssRules;
+        headInClone.appendChild(styleTag);
+
+        // --- 4. PREPARAR ESTADO INICIAL DE LA PÁGINA ---
+        // Forzamos que la pantalla de Login sea la visible por defecto en el archivo descargado.
         const loginScreenClone = reportDocument.querySelector('#login-screen');
         const dashboardScreenClone = reportDocument.querySelector('#dashboard-screen');
         const adminScreenClone = reportDocument.querySelector('#admin-screen');
 
-        // 3. Establecer el estado de visibilidad inicial en el clon.
-        // Forzamos que la pantalla de Login sea la ÚNICA visible.
-        if (loginScreenClone) {
-            // A la pantalla de Login le quitamos cualquier clase que la oculte.
-            loginScreenClone.classList.remove('hidden-screen');
-            // Y le aplicamos un estilo en línea para asegurar que se muestre como un contenedor flex.
-            loginScreenClone.style.display = 'flex';
-        }
-        if (dashboardScreenClone) {
-            // A la pantalla del Dashboard la ocultamos de forma definitiva con un estilo en línea.
-            dashboardScreenClone.style.display = 'none';
-        }
-        if (adminScreenClone) {
-            // Hacemos lo mismo con la pantalla de Administrador.
-            adminScreenClone.style.display = 'none';
-        }
-
-        // 4. Eliminar la etiqueta <script> del clon.
-        // Esto es crucial para que el archivo descargado sea estático y no intente ejecutar ninguna lógica.
-        const scriptInClone = reportDocument.querySelector('script');
-        if (scriptInClone) {
-            scriptInClone.remove();
-        }
-
-        // 5. Convertir el clon (ya modificado y limpio) a texto HTML.
+        if (loginScreenClone) loginScreenClone.classList.remove('hidden-screen');
+        if (dashboardScreenClone) dashboardScreenClone.classList.add('hidden-screen');
+        if (adminScreenClone) adminScreenClone.classList.add('hidden-screen');
+        
+        // --- 5. GENERAR Y DESCARGAR EL ARCHIVO ---
+        // Obtener el HTML final del documento clonado y modificado.
         const htmlContent = reportDocument.outerHTML;
 
-        // 6. Crear un "Blob" (un objeto tipo archivo) y generar un enlace para su descarga.
+        // Crear un nombre de archivo dinámico con el mes y año actual.
+        const date = new Date();
+        const monthNames = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+        const month = monthNames[date.getMonth()];
+        const year = date.getFullYear();
+        const fileName = `reporte_evaluacion_${month}_${year}.html`;
+
+        // Crear el "Blob" y el enlace de descarga.
         const blob = new Blob([htmlContent], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'reporte_evaluacion_login.html'; // Nombre del archivo descargado
+        a.download = fileName; // Usar el nombre de archivo dinámico
         document.body.appendChild(a);
-        a.click(); // Simular un clic en el enlace para iniciar la descarga
-        document.body.removeChild(a); // Limpiar el enlace del documento
-        URL.revokeObjectURL(url); // Liberar la memoria del navegador
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showModal('Éxito', `El reporte "${fileName}" ha sido generado y descargado.`);
     });
     
     // ######################################################################
