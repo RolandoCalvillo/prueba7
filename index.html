@@ -819,8 +819,8 @@
     const trendsModalCancelBtn = document.getElementById('trends-modal-cancel');
     const trendsListContainer = document.getElementById('trends-list-container');
     
-    // ######################################################################
-    // ##                  INICIO DE LA SECCIÓN CORREGIDA                  ##
+// ######################################################################
+    // ##              INICIO DE LA SECCIÓN CORREGIDA Y MEJORADA             ##
     // ######################################################################
     
     // Botón para generar y descargar el reporte
@@ -828,23 +828,15 @@
 
     adminDownloadReportBtn.addEventListener('click', () => {
         // --- 1. PREPARACIÓN ---
-        // Clonar el documento actual para no modificar la página en vivo.
         const reportDocument = document.documentElement.cloneNode(true);
 
         // --- 2. INCRUSTAR DATOS ACTUALIZADOS ---
-        // Convertir el objeto 'database' actual (con todas las ediciones) a un string de JavaScript.
         const updatedDatabaseString = `let database = ${JSON.stringify(database, null, 4)};`;
-        
-        // Buscar la etiqueta <script> en el documento clonado.
         const scriptTagInClone = reportDocument.querySelector('script');
         if (scriptTagInClone) {
-            // Reemplazar todo el contenido del script con la nueva base de datos y la lógica de la aplicación.
-            // Primero, encontramos el final de la declaración de 'database' para cortarla.
             const scriptContent = scriptTagInClone.innerHTML;
             const databaseEndIndex = scriptContent.indexOf('// Funciones de persistencia en localStorage');
             const logicAfterDatabase = scriptContent.substring(databaseEndIndex);
-
-            // Unimos la nueva base de datos con el resto de la lógica.
             scriptTagInClone.innerHTML = updatedDatabaseString + '\n\n' + logicAfterDatabase;
         }
 
@@ -852,47 +844,51 @@
         const headInClone = reportDocument.querySelector('head');
         const styleTag = document.createElement('style');
         let allCssRules = '';
-
-        // Recorrer todas las hojas de estilo de la página.
         Array.from(document.styleSheets).forEach(sheet => {
             try {
-                // Unir todas las reglas de una hoja de estilo en un solo string.
                 allCssRules += Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
             } catch (e) {
-                console.warn("No se pudo leer una hoja de estilos (puede ser de un dominio externo):", e);
+                console.warn("No se pudo leer una hoja de estilos (CORS):", e);
             }
         });
-
         styleTag.textContent = allCssRules;
         headInClone.appendChild(styleTag);
+        reportDocument.querySelectorAll('link[rel="stylesheet"]').forEach(link => link.remove());
 
-        // --- 4. PREPARAR ESTADO INICIAL DE LA PÁGINA ---
-        // Forzamos que la pantalla de Login sea la visible por defecto en el archivo descargado.
+        // --- 4. PREPARAR ESTADO INICIAL DE LA PÁGINA (CORREGIDO) ---
         const loginScreenClone = reportDocument.querySelector('#login-screen');
         const dashboardScreenClone = reportDocument.querySelector('#dashboard-screen');
         const adminScreenClone = reportDocument.querySelector('#admin-screen');
 
-        if (loginScreenClone) loginScreenClone.classList.remove('hidden-screen');
-        if (dashboardScreenClone) dashboardScreenClone.classList.add('hidden-screen');
-        if (adminScreenClone) adminScreenClone.classList.add('hidden-screen');
+        if (loginScreenClone) {
+            loginScreenClone.classList.remove('hidden-screen');
+            // ¡LÍNEA AÑADIDA! Forzamos el estilo de visualización correcto.
+            loginScreenClone.style.display = 'flex';
+        }
+        if (dashboardScreenClone) {
+            dashboardScreenClone.classList.add('hidden-screen');
+            // ¡LÍNEA AÑADIDA! Forzamos que esté oculto.
+            dashboardScreenClone.style.display = 'none';
+        }
+        if (adminScreenClone) {
+            adminScreenClone.classList.add('hidden-screen');
+            // ¡LÍNEA AÑADIDA! Forzamos que esté oculto.
+            adminScreenClone.style.display = 'none';
+        }
         
         // --- 5. GENERAR Y DESCARGAR EL ARCHIVO ---
-        // Obtener el HTML final del documento clonado y modificado.
         const htmlContent = reportDocument.outerHTML;
-
-        // Crear un nombre de archivo dinámico con el mes y año actual.
         const date = new Date();
         const monthNames = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
         const month = monthNames[date.getMonth()];
         const year = date.getFullYear();
         const fileName = `reporte_evaluacion_${month}_${year}.html`;
 
-        // Crear el "Blob" y el enlace de descarga.
         const blob = new Blob([htmlContent], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = fileName; // Usar el nombre de archivo dinámico
+        a.download = fileName;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
